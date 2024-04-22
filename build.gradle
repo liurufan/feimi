@@ -1,0 +1,105 @@
+plugins {
+    id 'org.springframework.boot' version '2.5.12'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+    id 'war'
+}
+
+group = 'org.basic.feimi'
+version = '0.0.1'
+sourceCompatibility = '17'
+//amazon corretto 17.0.10
+//gradle 8.4
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+ext {
+    targetEnv = ""
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    providedRuntime 'org.springframework. boot:spring-boot-starter-tomcat'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
+    implementation'io.jsonwebtoken:jjwt-jackson:0.11.2'
+    implementation 'mysql:mysql-connector-java'
+    implementation 'com.vladmihalcea:hibernate-types-5:2.10.2'
+    implementation 'org.modelmapper:modelmapper:2.3.9'
+    implementation 'javax.servlet:javax.servlet-api:4.0.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+    implementation 'io.springfox:springfox-swagger2:3.0.0'
+    implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.5.5'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+war {
+    archiveBaseName = 'basic.feimi'
+    enabled = true
+}
+
+task buildResources {
+    description 'Replace environment.'
+    doFirst {
+        clean
+    }
+    doLast {
+        copy {
+            println '　　　　start replacing :' + targetEnv
+            from 'src/profiles/' + targetEnv + '/resources/'
+            into 'src/main/resources'
+            include 'application.properties'
+            include 'common.properties'
+            include 'awsS3Credentials.properties'
+            include 'awsSesCredentials.properties'
+            println '　　　　replacing finished'
+        }
+    }
+    finalizedBy {
+        war
+    }
+}
+
+task war_dev {
+    group = 'build'
+    description 'Create war file for dev environment.'
+
+    doFirst {
+        targetEnv = 'dev'
+    }
+    finalizedBy {
+        buildResources
+    }
+}
+
+task war_prod {
+    group = 'build'
+    description 'Create war file for prod environment.'
+
+    doFirst {
+        targetEnv = 'prod'
+    }
+    finalizedBy {
+        buildResources
+    }
+}
